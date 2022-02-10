@@ -1,0 +1,63 @@
+version: '2.1'
+
+networks:
+  DKB_Network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.40.0.0/20
+
+services:
+
+    dkb-mysqldb:
+      #image: mysql:5.7
+      #restart: always
+      build: ./MySql/
+      environment:
+        - MYSQL_ROOT_HOST=${MYSQL_ROOT_HOST}
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        # So you don't have to use root, but you can if you like
+        - MYSQL_USER=${MYSQL_USER}
+        # You can use whatever password you like
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        # Password for root access
+        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      ports:
+        # <Port exposed> : < MySQL Port running inside container>
+        - '3307:3307'
+      expose:
+        # Opens port 3306 on the container
+        - '3307'
+        # Where our data will be persisted
+      volumes:
+        - dkb-mysql:/var/lib/mysql
+      healthcheck:
+        test: mysqladmin ping -h 127.0.0.1 --port 3307 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+        interval: 10s
+        timeout: 10s
+        retries: 5
+        start_period: 40s
+      networks:
+        DKB_Network:
+          ipv4_address: 172.40.0.10
+      #command: "--init-file /user-service/database-scripts/commit/script.sql"
+      
+    dkb-backendserver:
+      build: ./dkb-backendserver/
+      ports:
+        - '8080:8080'
+      expose:
+        # Opens port 3306 on the container
+        - '8080'
+      links:
+        - "dkb-mysqldb"
+      depends_on:
+        dkb-mysqldb:
+          condition: service_healthy
+      restart: always
+      networks:
+        DKB_Network:
+          ipv4_address: 172.40.0.11
+
+volumes:
+    dkb-mysql:

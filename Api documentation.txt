@@ -1,0 +1,22 @@
+To get information about an account:-
+
+- show balance: GET /account/info/balance/{iban}
+- show account(s) with specific account types: GET /account/info/{types} => types is comma separated string
+- show account transactions history: GET /account/info/transactions-history/{iban}
+
+
+To manage accounts:-
+
+- create new account: POST /account/management/
+ Body: {
+ "accountType": possible values ["CHECKING","SAVINGS","PRIVATE_LOAN"]
+}
+
+- lock an account: PUT  /account/management/{iban}/lock
+- unlock an account: PUT  /account/management/{iban}/unlock
+
+
+
+To Transfer money:
+- transfer money from account to another: POST /account/transfer-money/{source}/{destination}/{amount}
+- deposit money to an account: POST /account/transfer-money/deposit/{iban}/{amount}
